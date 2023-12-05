@@ -152,7 +152,8 @@ class Beam:
 
 class Score:
     """
-    スコアに関するクラス"""
+    スコアに関するクラス
+    """
     def __init__(self):
         self.font = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 30)  # フォントの設定
         self.color = (0, 0, 225)
@@ -169,7 +170,21 @@ class Score:
         """
         self.img = self.font.render(f"Score: {self.score}", True, self.color)
         screen.blit(self.img, self.rct)
-        
+
+
+class Explosion:
+    """
+    爆弾を破壊したときの処理
+    """
+    def __init__(self, bomb:Bomb):
+        img = pg.image.load(f"{MAIN_DIR}/fig/explosion.gif")
+        self.imgs = [pg.transform.flip(img, True, True), img]  # 上下左右flipしたものと通常のものを格納
+        self.pos = bomb.rct.center
+        self.life = 30  # 表示時間を設定
+
+    def update(self, screen: pg.Surface):
+        self.life -= 1  # 経過時間を１減算
+        screen.blit(self.imgs[self.life%2], self.pos)  # lifeに応じて画像リストを交互に表示
 
 
 def main():
@@ -180,6 +195,7 @@ def main():
     bombs = [Bomb() for _ in range(NUM_OF_BOMBS)]  # BombインスタンスがNUM個並んだリスト
     beams = []  # ビームの空リスト
     score = Score()
+    exp_lst = []
 
     clock = pg.time.Clock()
     tmr = 0
@@ -208,14 +224,22 @@ def main():
                     beams.remove(beam)  # 衝突したらリストから削除する
                     bombs[j] = None
                     bird.change_img(6, screen)
+                    exp_lst.append(Explosion(bomb))
 
-        beams = [beam for beam in beams if beam is not None]
+        beams = [beam for beam in beams if beam is not None]  
 
         # Noneでない爆弾だけのリストを作る
         bombs =  [bomb for bomb in bombs if bomb is not None ] 
 
+        #  exp_lstからlife < 0 の要素を取り除く
+        exp_lst = [ex for ex in exp_lst if ex.life > 0]
+
         key_lst = pg.key.get_pressed()
         bird.update(key_lst, screen)
+
+        for ex in exp_lst:
+            ex.update(screen)
+
         for bomb in bombs:
             bomb.update(screen)
 
