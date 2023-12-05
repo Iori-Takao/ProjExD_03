@@ -9,7 +9,7 @@ import pygame as pg
 WIDTH = 1600  # ゲームウィンドウの幅
 HEIGHT = 900  # ゲームウィンドウの高さ
 MAIN_DIR = os.path.split(os.path.abspath(__file__))[0]
-NUM_OF_BOMBS = 5  # 爆弾の数
+NUM_OF_BOMBS = 3  # 爆弾の数
 
 
 def check_bound(obj_rct: pg.Rect) -> tuple[bool, bool]:
@@ -150,6 +150,28 @@ class Beam:
         screen.blit(self.img, self.rct)
 
 
+class Score:
+    """
+    スコアに関するクラス"""
+    def __init__(self):
+        self.font = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 30)  # フォントの設定
+        self.color = (0, 0, 225)
+        self.score = 0
+        self.img = self.font.render(f"Score: {self.score}", True, self.color)  # 文字列のSurfaceを作成
+        self.rct = self.img.get_rect()
+        self.rct.x = 100
+        self.rct.y = HEIGHT - 50
+
+    def update(self, screen: pg.Surface):
+        """
+        現在のスコアを表示させる文字列Surfaceの生成
+        引数 screen：画面Surface
+        """
+        self.img = self.font.render(f"Score: {self.score}", True, self.color)
+        screen.blit(self.img, self.rct)
+        
+
+
 def main():
     pg.display.set_caption("たたかえ！こうかとん")
     screen = pg.display.set_mode((WIDTH, HEIGHT))    
@@ -157,6 +179,7 @@ def main():
     bird = Bird(3, (900, 400))
     bombs = [Bomb() for _ in range(NUM_OF_BOMBS)]  # BombインスタンスがNUM個並んだリスト
     beam = None
+    score = Score()
 
     clock = pg.time.Clock()
     tmr = 0
@@ -178,8 +201,9 @@ def main():
                 time.sleep(1)
                 return
         
-        for i, bomnb in enumerate(bombs):
+        for i, bomb in enumerate(bombs):
             if beam is not None and beam.rct.colliderect(bomb.rct):
+                score.score += 1
                 beam = None
                 bombs[i] = None
                 bird.change_img(6, screen)
@@ -193,6 +217,7 @@ def main():
             bomb.update(screen)
         if beam is not None:
             beam.update(screen)
+        score.update(screen)
         pg.display.update()
         tmr += 1
         clock.tick(50)
